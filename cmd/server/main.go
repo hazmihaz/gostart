@@ -2,36 +2,61 @@ package main
 
 import (
 	"fmt"
-	"log"
+
+	"github.com/hazmihaz/gostart/pkg/log"
 
 	"github.com/gofiber/fiber"
 	"github.com/gofiber/fiber/middleware"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 
+	"github.com/hazmihaz/gostart/internal/auth"
+	"github.com/hazmihaz/gostart/internal/domain"
 	"github.com/hazmihaz/gostart/internal/user"
 )
+
+var version = "0.0.1"
 
 func main() {
 	fmt.Println("Starting Server")
 
+	// create root logger tagged with server version
+	logger := log.New().With(nil, "version", version)
+
 	app := fiber.New()
-
 	app.Settings.ErrorHandler = errorHandler
-
 	app.Use(middleware.Recover())
 
 	api := app.Group("/api")
-
 	v1 := api.Group("/v1")
 	v1.Get("/", handler)
-	v1.Get("/hello", helloHandler)
 
-	user.RegisterHandlers(v1)
+	// init database
+	db, err := gorm.Open("mysql", "root:pass@(192.168.99.100:3306)/gostart?charset=utf8mb4&parseTime=True&loc=Local")
+	if err != nil {
+		logger.Errorf("Error connecting to database. ", err)
+	}
+	defer db.Close()
 
-	log.Fatal(app.Listen(3300))
+	// auto migrate
+	db.AutoMigrate(&domain.User{})
+
+	userrep := user.NewRepository(db, logger)
+	usersvc := user.NewService(userrep, logger)
+
+	user.RegisterHandlers(v1, logger, usersvc)
+	auth.RegisterHandlers(v1)
+
+	logger.Error(app.Listen(3300))
 }
 
 func handler(c *fiber.Ctx) {
 	c.Send("Go Rest Starter API V1")
+}
+
+type errorResponse struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
 }
 
 func errorHandler(c *fiber.Ctx, err error) {
@@ -43,11 +68,14 @@ func errorHandler(c *fiber.Ctx, err error) {
 		code = e.Code
 	}
 
-	// Return HTTP response
-	c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
-	c.Status(code).SendString(err.Error())
-}
+	fmt.Printf(err.Error())
 
-func helloHandler(c *fiber.Ctx) {
-	c.Send("Hello World!")
+	// Return HTTP response
+	er := errorResponse{
+		code,
+		err.Error(),
+	}
+	// c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
+	c.Status(code).JSON(&er)
+	//SendString(err.Error())
 }

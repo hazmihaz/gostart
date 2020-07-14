@@ -1,13 +1,20 @@
 # Go REST API Starter (Boilerplate)
 
-TODO routing with fiber
+```
+TODO refactor -> domain, repository, service, routes
 TODO database with gorm
-TODO config
-TODO auth admin
+TODO routing with fiber 
+TODO logging with zap and context
 TODO auth user
-TODO logging with zap
+
+TODO call service from another service
+TODO config
 TODO database migration
 TODO debugging
 TODO dockerize
 TODO testing
 TODO CICD
+TODO docs
+TODO body validation
+TODO send mail
+```
