@@ -38,6 +38,6 @@ type UserService interface {
 	Query(ctx context.Context, offset, limit int) ([]User, error)
 	Count(ctx context.Context) (int, error)
 	Create(ctx context.Context, input User) (User, error)
-	Update(ctx context.Context, id uint, input User) (User, error)
-	Delete(ctx context.Context, id uint) (User, error)
+	Update(ctx context.Context, input User) error
+	Delete(ctx context.Context, id uint) error
 }

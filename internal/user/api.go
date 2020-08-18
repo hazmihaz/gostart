@@ -1,16 +1,18 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/hazmihaz/gostart/internal/domain"
 	"github.com/hazmihaz/gostart/pkg/log"
-	tou "github.com/hazmihaz/gostart/pkg/strtouint"
+	tui "github.com/hazmihaz/gostart/pkg/strtouint"
 
 	"github.com/gofiber/fiber"
 )
 
 type paging struct {
-	offset int
-	limit  int
+	Offset int
+	Limit  int
 }
 
 // RegisterHandlers registers handlers for different HTTP requests.
@@ -22,7 +24,7 @@ func RegisterHandlers(g fiber.Router, logger log.Logger, userService domain.User
 			logger.Error(err)
 		}
 
-		user, err := userService.Query(c.Context(), p.offset, p.limit)
+		user, err := userService.Query(c.Context(), p.Offset, p.Limit)
 		if err != nil {
 			logger.Error(err)
 		} else {
@@ -30,8 +32,19 @@ func RegisterHandlers(g fiber.Router, logger log.Logger, userService domain.User
 		}
 	})
 
+	g.Get("/user/count", func(c *fiber.Ctx) {
+		count, err := userService.Count(c.Context())
+		fmt.Print(count)
+
+		if err != nil {
+			logger.Error(err)
+		} else {
+			c.JSON(&count)
+		}
+	})
+
 	g.Get("/user/:id", func(c *fiber.Ctx) {
-		id, err := tou.Parse(c.Params("id"))
+		id, err := tui.Parse(c.Params("id"))
 		user, err := userService.Get(c.Context(), id)
 		if err != nil {
 			logger.Error(err)
@@ -59,4 +72,42 @@ func RegisterHandlers(g fiber.Router, logger log.Logger, userService domain.User
 
 		c.JSON(&user)
 	})
+
+	g.Put("/user", func(c *fiber.Ctx) {
+		user := domain.User{}
+
+		if err := c.BodyParser(&user); err != nil {
+			logger.Error(err)
+			c.Next(err)
+			return
+		}
+
+		err := userService.Update(c.Context(), user)
+		if err != nil {
+			logger.Error(err)
+			c.Next(err)
+			return
+		}
+
+		user, err = userService.Get(c.Context(), user.ID)
+		if err != nil {
+			logger.Error(err)
+			c.Next(err)
+			return
+		}
+
+		c.JSON(&user)
+	})
+
+	g.Delete("/user/:id", func(c *fiber.Ctx) {
+		id, err := tui.Parse(c.Params("id"))
+		err = userService.Delete(c.Context(), id)
+		if err != nil {
+			logger.Error(err)
+			c.Next(err)
+		} else {
+			c.JSON("success")
+		}
+	})
+
 }

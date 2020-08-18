@@ -37,21 +37,33 @@ func (r repository) Create(c context.Context, user domain.User) (domain.User, er
 
 // Update saves the changes to a user in the database.
 func (r repository) Update(c context.Context, user domain.User) error {
-	return nil
+	res := r.db.Save(&user)
+
+	return res.Error
 }
 
 // Delete deletes a user with the specified ID from the database.
 func (r repository) Delete(c context.Context, id uint) error {
-	return nil
+	res := r.db.Where("id = ?", id).Delete(&domain.User{})
+	return res.Error
 }
 
 // Count returns the number of the user records in the database.
 func (r repository) Count(c context.Context) (int, error) {
-	return 0, nil
+	count := 0
+	res := r.db.Model(&domain.User{}).Count(&count)
+
+	return count, res.Error
 }
 
 // Query retrieves the user records with the specified offset and limit from the database.
 func (r repository) Query(c context.Context, offset, limit int) ([]domain.User, error) {
-	var users []domain.User
-	return users, nil
+	users := []domain.User{}
+
+	res := r.db.
+		Offset(offset).
+		Limit(limit).
+		Find(&users)
+
+	return users, res.Error
 }
