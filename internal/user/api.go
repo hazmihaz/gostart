@@ -8,10 +8,21 @@ import (
 	"github.com/gofiber/fiber"
 )
 
+type paging struct {
+	offset int
+	limit  int
+}
+
 // RegisterHandlers registers handlers for different HTTP requests.
-func RegisterHandlers(g *fiber.Group, logger log.Logger, userService domain.UserService) {
+func RegisterHandlers(g fiber.Router, logger log.Logger, userService domain.UserService) {
 	g.Get("/user", func(c *fiber.Ctx) {
-		user, err := userService.Get(c.Context(), 1)
+		p := new(paging)
+
+		if err := c.QueryParser(p); err != nil {
+			logger.Error(err)
+		}
+
+		user, err := userService.Query(c.Context(), p.offset, p.limit)
 		if err != nil {
 			logger.Error(err)
 		} else {

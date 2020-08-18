@@ -7,7 +7,7 @@ import (
 )
 
 // RegisterHandlers registers handlers for different HTTP requests.
-func RegisterHandlers(g *fiber.Group) {
+func RegisterHandlers(g fiber.Router) {
 	g.Post("/auth/login", login())
 }
 
