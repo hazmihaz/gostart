@@ -18,8 +18,6 @@ import (
 var version = "0.0.1"
 
 func main() {
-	fmt.Println("Starting Server")
-
 	// create root logger tagged with server version
 	logger := log.New().With(nil, "version", version)
 
@@ -32,7 +30,7 @@ func main() {
 	v1.Get("/", handler)
 
 	// init database
-	db, err := gorm.Open("mysql", "root:pass@(192.168.99.100:3306)/gostart?charset=utf8mb4&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "root:pass@(localhost:3306)/gostart?charset=utf8mb4&parseTime=True&loc=Local")
 	if err != nil {
 		logger.Errorf("Error connecting to database. ", err)
 	}
