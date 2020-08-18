@@ -1,10 +1,9 @@
 package user
 
 import (
-	"strconv"
-
 	"github.com/hazmihaz/gostart/internal/domain"
 	"github.com/hazmihaz/gostart/pkg/log"
+	tou "github.com/hazmihaz/gostart/pkg/strtouint"
 
 	"github.com/gofiber/fiber"
 )
@@ -21,9 +20,8 @@ func RegisterHandlers(g *fiber.Group, logger log.Logger, userService domain.User
 	})
 
 	g.Get("/user/:id", func(c *fiber.Ctx) {
-		id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-		idu := uint(id)
-		user, err := userService.Get(c.Context(), idu)
+		id, err := tou.Parse(c.Params("id"))
+		user, err := userService.Get(c.Context(), id)
 		if err != nil {
 			logger.Error(err)
 			c.Next(err)
